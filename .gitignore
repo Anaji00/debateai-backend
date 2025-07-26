@@ -1,1 +1,33 @@
+# 🐍 Python bytecode
+__pycache__/
+*.py[cod]
+
+# 📦 Environment
+.env
+.venv/
+env/
+venv/
+
+# 🗃️ Database
+*.db
+
+# 📁 VS Code settings (optional)
+.vscode/
+
+# 📄 Logs and system files
+*.log
+.DS_Store
+Thumbs.db
+
+# 🔊 Audio files (optional if not versioning)
+static/audio/
+
+# 🔍 IDE metadata
+*.idea/
+*.swp
+
+# 🚫 Ignore backup or temp files
+*.bak
+*.tmp
+*.old
  

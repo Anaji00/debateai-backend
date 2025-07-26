@@ -31,3 +31,4 @@ static/audio/
 *.tmp
 *.old
  
+.env 

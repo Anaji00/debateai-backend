@@ -6,10 +6,9 @@ from passlib.context import CryptContext # Import CryptContext for password hash
  
 # --- Configuration ---
 # BEST PRACTICE: For production, load these values from environment variables
-# instead of hardcoding them. This keeps sensitive keys out of your source code.
-SECRET_KEY = "testsecretkeyforapplication"
+SECRET_KEY = ""
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 
  
 # --- Password Hashing ---
 # Create a CryptContext instance, specifying bcrypt as the hashing scheme.

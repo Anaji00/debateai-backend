@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session # Import Session to enable type hinting for t
 import schemas # Import the schemas module to access Pydantic models.
 from core.security import hash_password # Import the password hashing function.
 from models.User import User # Import the User model from the models module.
+from models import SessionToken # Import the SessionToken model from the models module.
  
 # Function to retrieve a user from the database by their username.
 def get_user(db: Session, username: str):
@@ -21,3 +22,20 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.commit() # Commit the transaction to save the user to the database.
     db.refresh(db_user) # Refresh the user object to get its state from the database (e.g., auto-generated IDs).
     return db_user
+
+from models import SessionToken
+
+def create_session_token(db: Session, user_id: int, token: str):
+    db_token = SessionToken(user_id=user_id, token=token)
+    db.add(db_token)
+    db.commit()
+    db.refresh(db_token)
+    return db_token
+
+def delete_session_token(db: Session, token: str):
+    db.query(SessionToken).filter(SessionToken.token == token).delete()
+    db.commit()
+
+def get_user_by_session_token(db: Session, token: str):
+    session = db.query(SessionToken).filter(SessionToken.token == token).first()
+    return session.user if session else None

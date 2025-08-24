@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta # Import datetime and timedelta for token expiration.
 from jose import jwt # Import the JWT library for creating and verifying tokens.
 from passlib.context import CryptContext # Import CryptContext for password hashing.
- 
+import secrets
 # --- Configuration ---
 # BEST PRACTICE: For production, load these values from environment variables
 SECRET_KEY = ""
@@ -34,3 +34,6 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     # Encode the payload into a JWT string using your secret key and algorithm.
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def generate_access_token() -> str:
+    return secrets.token_urlsafe(32)

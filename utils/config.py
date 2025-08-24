@@ -5,7 +5,7 @@
 
 import os  # For accessing environment variables from system
 from dotenv import load_dotenv  # For loading .env files into environment
-from openai import OpenAI  # OpenAI client for API calls
+from openai import AsyncOpenAI  # OpenAI client for API calls
 
 
 def load_environment():
@@ -22,7 +22,7 @@ def load_environment():
         raise ValueError("OPEN AI KEY NOT LOADED")  # Raise error if missing (stops app execution)
     return openai_key  # Return the API key for use in other modules
 
-def get_openai_client():
+def get_openai_async_client():
     """
     Initialize and return OpenAI client with API key
     Called by: debatesim.py (main app) - creates client for debate_engine.py
@@ -31,4 +31,4 @@ def get_openai_client():
     Usage: client = get_openai_client() -> client.chat.completions.create(...)
     """
     api_key = load_environment()  # Get validated API key (calls function above)
-    return OpenAI(api_key=api_key)  # Create and return OpenAI client (used in debate_engine.py)
+    return AsyncOpenAI(api_key=api_key)  # Create and return OpenAI client (used in debate_engine.py)

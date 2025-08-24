@@ -1,39 +1,86 @@
-#auth
- 
-from fastapi import APIRouter, Depends, HTTPException, status # Core FastAPI components.
-from fastapi.security import OAuth2PasswordRequestForm # A dependency class that extracts username and password from a form body.
-from sqlalchemy.orm import Session # For type hinting the database session.
- 
-from crud import user as crud_user # Import the user module from the crud package.
-import schemas # The module containing our Pydantic schemas.
-from core.security import create_access_token, verify_password # Security utility for token creation.
-from dependencies import get_db # Import the shared get_db dependency.
- 
-# Create a new router object. This helps organize endpoints.
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+import secrets
+
+from crud import user as crud_user
+import schemas
+from models import User
+from core.security import verify_password
+from dependencies import get_db
+
 router = APIRouter()
- 
-# Endpoint for user registration.
-@router.post("/users/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+
+
+# ============================
+# 👤 Register User
+# ============================
+@router.post("/users", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    # Check if a user with the same username already exists.
-    db_user = crud_user.get_user(db, username=user.username)
+    db_user = crud_user.get_user(db, user.username)  # ✅ Fixed keyword usage
     if db_user:
-        # If the user exists, raise an HTTP exception indicating a conflict.
         raise HTTPException(status_code=400, detail="Username already registered")
-    # If the username is available, create the new user.
     return crud_user.create_user(db=db, user=user)
- 
-# Endpoint for user login, which returns a JWT.
-@router.post("/login", response_model=schemas.Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    # Use the username from the form data to look up the user in the database.
+
+
+# ============================
+# 🔐 Login (Set Cookie)
+# ============================
+@router.post("/login")
+def login(
+    response: Response,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     user = crud_user.get_user(db, form_data.username)
-    # Check if the user exists and if the provided password is correct.
     if not user or not verify_password(form_data.password, user.hashed_password):
-        # If not, raise an unauthorized error. Note: use 'detail' not 'details'.
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password", headers={"WWW-Authenticate": "Bearer"})
-    # If credentials are correct, create a new access token for the user.
-    # The 'sub' (subject) of the token is the username.
-    token = create_access_token({"sub": user.username})
-    # Return the token in the format defined by the 'Token' schema.
-    return {"access_token": token, "token_type": "bearer"}
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+
+    # Generate secure random token
+    session_token = secrets.token_urlsafe(32)
+    crud_user.create_session_token(db, user_id=user.id, token=session_token)
+
+    # Set cookie on response
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        max_age=3600 * 24 * 7,  # 7 days
+        secure=False,  # Set to True in production with HTTPS
+        samesite="Lax"
+    )
+
+    return {"message": "Login successful"}
+
+
+# ============================
+# 🚪 Logout (Clear Cookie)
+# ============================
+@router.post("/logout")
+def logout(
+    response: Response,
+    session_token: str = Cookie(None),
+    db: Session = Depends(get_db)
+):
+    if session_token:
+        crud_user.delete_session_token(db, token=session_token)
+        response.delete_cookie("session_token")
+    return {"message": "Logged out"}
+
+
+# ============================
+# 👀 Get Current User (/me)
+# ============================
+@router.get("/me", response_model=schemas.User)
+def read_current_user(
+    session_token: str = Cookie(None),
+    db: Session = Depends(get_db)
+):
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    user = crud_user.get_user_by_session_token(db, token=session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+
+    return user

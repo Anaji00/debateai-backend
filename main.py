@@ -1,32 +1,57 @@
-from fastapi import FastAPI # Import the main FastAPI class.
-from fastapi.middleware.cors import CORSMiddleware # Import middleware for handling Cross-Origin Resource Sharing.
-from routers import auth, debate # Import the router objects from your routers module.
-from core.database import Base, engine # Import the Base and engine from your database configuration.
-from models import user, debate_models # Import your SQLAlchemy models to ensure they are known to the Base.
+"""
+Main application file for the DebateAI API.
+This file initializes the FastAPI application, configures middleware,
+sets up database connections, and includes API routers.
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from routers.auth import router as auth_router
+import os
  
-# This line creates all the database tables defined by your SQLAlchemy models (e.g., the User table).
-# It checks if the tables exist before creating them, so it's safe to run every time the application starts.
+from core.database import Base, engine
+from models import User  # Importing User ensures its model is known to SQLAlchemy's Base
+from routers import auth, debate
+ 
+# This line creates all database tables defined by SQLAlchemy models that are
+# subclasses of Base. It's safe for development but for production,
+# a migration tool like Alembic is recommended.
 Base.metadata.create_all(bind=engine)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
  
-# Create an instance of the FastAPI application.
-app = FastAPI(title="DebateAI API")
+app = FastAPI(
+    title="DebateAI API",
+    description="API for managing user authentication and debate sessions.",
+    version="1.0.0",
+)
+
+origins = [
+    "http://localhost:5173",  # Vite frontend dev server
+    "http://127.0.0.1:5173",  # sometimes needed
+]
  
-# --- Middleware ---
-# Add the CORS middleware to the application.
-# This allows your frontend (e.g., a React app) to make requests to this backend.
+# Configure Cross-Origin Resource Sharing (CORS)
 app.add_middleware(
     CORSMiddleware,
-    # SECURITY WARNING: allow_origins=["*"] is insecure for production.
-    # For production, you should restrict this to your frontend's domain,
-    # e.g., allow_origins=["https://your-frontend-domain.com"].
-    allow_origins=["*"], # Defines which origins are allowed to make requests.
-    allow_credentials=True, # Allows cookies to be included in requests.
-    allow_methods=["*"], # Allows all HTTP methods (GET, POST, etc.).
-    allow_headers=["*"], # Allows all request headers.
+    allow_origins=origins,  # The origin of your frontend app
+    allow_credentials=True,  # Allow cookies to be sent with requests
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all request headers
 )
+
+# Mount static files for audio access
+app.mount("/static", StaticFiles(directory="static"), name="static")
  
-# --- Routers ---
-# Include the routers in the main FastAPI app.
-# This makes the endpoints defined in auth.py and debate.py available.
-app.include_router(auth.router, prefix = "/auth", tags = ["Auth"])
-app.include_router(debate.router, prefix = "/debate", tags = ["Debate"])
+@app.get("/", tags=["Root"])
+def read_root():
+    """A simple health check endpoint to confirm the API is running."""
+    return {"status": "ok", "message": "Welcome to the DebateAI API"}
+
+# This is what activates the endpoints defined in auth.py
+app.include_router(auth_router, prefix="/auth")
+ 
+# Include API routers
+app.include_router(debate.router, prefix="/debate", tags=["Debate"])

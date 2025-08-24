@@ -52,3 +52,6 @@ generated/
 
 # ✅ Optional: testing / coverage
 coverage/
+models/
+models/**/*.pth
+*.pth

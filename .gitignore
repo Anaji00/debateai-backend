@@ -1,8 +1,8 @@
-# 🐍 Python bytecode
+# 🐍 Python Bytecode
 __pycache__/
 *.py[cod]
 
-# 📦 Environment
+# 🐍 Python Environment
 .env
 .venv/
 env/
@@ -11,24 +11,44 @@ venv/
 # 🗃️ Database
 *.db
 
-# 📁 VS Code settings (optional)
-.vscode/
+# 🛠️ Build / Distribution
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# 📦 Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ⚡ Vite cache
+.vite/
+.cache/
 
 # 📄 Logs and system files
 *.log
 .DS_Store
 Thumbs.db
 
-# 🔊 Audio files (optional if not versioning)
+# 🎵 Audio & Generated Files
 static/audio/
+generated/
 
-# 🔍 IDE metadata
+# 📁 IDE & Editor settings
+.vscode/
 *.idea/
 *.swp
 
-# 🚫 Ignore backup or temp files
+# 🚫 Backup / Temp
 *.bak
 *.tmp
 *.old
- 
-.env 
+
+# ✅ Optional: testing / coverage
+coverage/

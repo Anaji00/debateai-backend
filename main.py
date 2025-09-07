@@ -1,57 +1,53 @@
+# backend/main.py
 """
 Main application file for the DebateAI API.
-This file initializes the FastAPI application, configures middleware,
-sets up database connections, and includes API routers.
+Sets up CORS for the React dev server, serves static files, wires routers,
+and exposes a simple /healthz endpoint. Ready for dev streaming.
 """
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from routers.auth import router as auth_router
-import os
- 
-from core.database import Base, engine
-from models import User  # Importing User ensures its model is known to SQLAlchemy's Base
+
+# --- DB bootstrap (kept your pattern) ---
+from core.database import Base, engine  # if your module is `database.py`, update import to match
+from models import User  # ensure models import so SQLAlchemy registers
 from routers import auth, debate
- 
-# This line creates all database tables defined by SQLAlchemy models that are
-# subclasses of Base. It's safe for development but for production,
-# a migration tool like Alembic is recommended.
+
+# Create tables in dev (migration tool recommended for prod)
 Base.metadata.create_all(bind=engine)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
 
-
- 
 app = FastAPI(
     title="DebateAI API",
     description="API for managing user authentication and debate sessions.",
     version="1.0.0",
 )
 
-origins = [
-    "http://localhost:5173",  # Vite frontend dev server
-    "http://127.0.0.1:5173",  # sometimes needed
-]
- 
-# Configure Cross-Origin Resource Sharing (CORS)
+# Allow your Vite dev server origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # The origin of your frontend app
-    allow_credentials=True,  # Allow cookies to be sent with requests
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all request headers
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Mount static files for audio access
-app.mount("/static", StaticFiles(directory="static"), name="static")
- 
-@app.get("/", tags=["Root"])
-def read_root():
-    """A simple health check endpoint to confirm the API is running."""
-    return {"status": "ok", "message": "Welcome to the DebateAI API"}
+# Serve generated audio, docs, etc.
+if not os.path.exists(STATIC_DIR):
+    os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# This is what activates the endpoints defined in auth.py
-app.include_router(auth_router, prefix="/auth")
- 
-# Include API routers
-app.include_router(debate.router, prefix="/debate", tags=["Debate"])
+# Routers
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(debate.router, prefix="/debate", tags=["debate"])
+
+# Health for dev/proxy/lb checks
+@app.get("/healthz")
+async def healthz():
+    return {"ok": True}

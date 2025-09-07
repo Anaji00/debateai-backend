@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 import secrets
 
-from crud import user as crud_user
+from crud import userDB as crud_user
 import schemas
 from models import User
 from core.security import verify_password

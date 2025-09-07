@@ -1,0 +1,33 @@
+# ---- Python bytecode & caches
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+
+# ---- Virtual environments
+.venv/
+venv/
+env/
+
+# ---- App/env files
+
+# ---- Tests & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- Build artifacts
+dist/
+build/
+*.egg-info/
+
+# ---- VCS & IDE/OS cruft
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Node bits if any landed here by mistake
+node_modules/

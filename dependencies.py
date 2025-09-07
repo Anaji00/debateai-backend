@@ -3,7 +3,7 @@
 from core.database import SessionLocal
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
-from crud import user as crud_user
+from crud import userDB as crud_user
 
 # Dependency function to get a database session for a request.
 # This pattern ensures the database session is always closed after the request is finished.

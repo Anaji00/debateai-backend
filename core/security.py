@@ -8,7 +8,7 @@ import secrets
 # BEST PRACTICE: For production, load these values from environment variables
 SECRET_KEY = ""
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
  
 # --- Password Hashing ---
 # Create a CryptContext instance, specifying bcrypt as the hashing scheme.
